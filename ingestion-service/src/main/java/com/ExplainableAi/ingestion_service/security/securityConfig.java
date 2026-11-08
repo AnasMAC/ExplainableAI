@@ -10,29 +10,27 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
-
 
 @Configuration 
 @EnableWebSecurity 
 @EnableMethodSecurity
 public class securityConfig {
     
-
     @Bean  
-    public SecurityFilterChain resourceServerFilterChain(HttpSecurity http) {
+    public SecurityFilterChain resourceServerFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .authorizeHttpRequests(auth ->
-                     auth.requestMatchers("/api/*")
+                     auth.requestMatchers("/api/**")
                      .authenticated()
-                     
-                ).oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt->jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+                     .requestMatchers("/h2-console/**").permitAll()
+                     .anyRequest().authenticated()
+                ).oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .build();
     }
-
 
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
@@ -51,10 +49,12 @@ public class securityConfig {
             
             // Convert to Spring Security GrantedAuthority objects with a "ROLE_" prefix
             return roles.stream()
-                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
+                    .map(role -> {
+                        System.out.println("ROLE_" + role.toUpperCase());
+                        return new SimpleGrantedAuthority("ROLE_" + role.toUpperCase());
+                    })
                     .collect(Collectors.toList());
         });
-        
         return converter;
     }
 
