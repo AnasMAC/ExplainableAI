@@ -18,7 +18,13 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity 
 @EnableMethodSecurity
 public class securityConfig {
-    
+
+    private final DelegatingAuthenticationEntryPoint entryPoint;
+
+    public securityConfig(DelegatingAuthenticationEntryPoint entryPoint) {
+        this.entryPoint = entryPoint;
+    }
+
     @Bean  
     public SecurityFilterChain resourceServerFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
@@ -28,7 +34,10 @@ public class securityConfig {
                      .authenticated()
                      .requestMatchers("/h2-console/**").permitAll()
                      .anyRequest().authenticated()
-                ).oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+                ).oauth2ResourceServer(oauth2 ->
+                        oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                                .authenticationEntryPoint(entryPoint)
+                )
                 .build();
     }
 

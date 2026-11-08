@@ -19,7 +19,7 @@ public class DocumentController {
     //     // ...
     // }
     
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')") 
+    @PreAuthorize("hasAnyRole( 'ADMIN')")
     @GetMapping ("/{id}")
     public ResponseEntity<String> getDocument(@PathVariable String id) {
         // ...
